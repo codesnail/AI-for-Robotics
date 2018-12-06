@@ -66,11 +66,7 @@ Since we have $p(x_{t-1}='cloudy')=1$, this simply gives us the second row of th
 
 However, to generalize further, we don't want to assume that we always know the previous state for sure. Therefore, we will use the probability distribution of the previous state.
 
-$$
-[p(x_t='sunny'|x_{t-1}='sunny')+p(x_t='sunny'|x_{t-1}='cloudy')+p(x_t='sunny'|x_{t-1}='rainy'),
-$$
-
-$[p(x_t='sunny'|x_{t-1}='sunny')+p(x_t='sunny'|x_{t-1}='cloudy')+p(x_t='sunny'|x_{t-1}='rainy'), $
+$[p(x_t='sunny'|x_{t-1}='sunny')+p(x_t='sunny'|x_{t-1}='cloudy')+p(x_t='sunny'|x_{t-1}='rainy'),$
 $ p(x_t='cloudy'|x_{t-1}='sunny')+p(x_t='cloudy'|x_{t-1}='cloudy')+p(x_t='cloudy'|t_{k-1}='rainy'), $
 $ p(x_t='rainy'|x_{t-1}='sunny')+p(x_t='rainy'|x_{t-1}='cloudy')+p(x_t='rainy'|x_{t-1}='rainy')] $
 

@@ -11775,8 +11775,13 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Bayesian-Filters">Bayesian Filters<a class="anchor-link" href="#Bayesian-Filters">&#182;</a></h1><p>In this article, I will demonstrate Bayesian filters in action. Bayesian filtering is a basic technique of Probabilistic Belief Estimation. The problem setting is as follows. We are given an environment with a number of possible states. We have a prior belief about the state of the environment, and about the possible transitions from one state to another. In addition, we have a way to sense the environment. All of these things are non-deterministic. The task at hand is to continuously monitor the environment and try to estimate the best state in the presence of this uncertainty. The problem setting can be extended by including actions that can influence the state, but we will not consider that at this time.</p>
-<p>To solidify the concepts, I will formulate the problem with a realistic example of weather prediction. This problem is taken from the book <em>Probabilistic Robotics</em> by Sebastian Thrun et. al. Consider that we have 3 possible weathers: sunny, cloudy, rainy. Today is the first day, and we know (for a fact) that it is cloudy.</p>
+<h1 id="Probabilistic-State-Estimation-with-Bayesian-Filters">Probabilistic State Estimation with Bayesian Filters<a class="anchor-link" href="#Probabilistic-State-Estimation-with-Bayesian-Filters">&#182;</a></h1><p>In this article, I will demonstrate Bayesian filters in action. Bayesian filtering is a basic technique of Probabilistic State Estimation. The problem can be understood with an example. Consider a car driving on the road. It has a map of its surroundings, as well as a GPS. Assume that we are starting from our home. We have the exact coordinates of this initial location. As we drive off, we have two ways to know about our current location. Depending on which road we took, direction, turns, average speed of the car etc., we can calculate our position based on the map. This is a knowledge based estimate. Depending on the quality of input attributes and the quality of our knowledge model, we may get a more or less accurate estimate of our exact location, but you can imagine that there is a margin of error. We can also use the other source of information we have, the GPS, which gives us the coordinates of our location. The GPS also has a margin of error. The idea is to combine our knowledge based estimate and the GPS reading, to get a combined estimate of our current location that is more accurate than the individual estimates. Bayesian Filtering is one approach to get this estimate.</p>
+<p>The general problem setting is as follows. We have an environment with a number of possible states, or even a continuous state space. We have a prior belief about the state of the environment, and about the dynamics (or motion model, or knowledge) of the environment, i.e., how the environment can move from one state to another. This may involve actions and their influence on the state. In addition, we have a way to sense the environment. All of these things (prior knowledge, influence of actions, and sensor readings) are non-deterministic. Implied here is the fact that we don't have absolute knowledge of the environment, or at least the attribute of the environment that we are interested in. So we have to infer or estimate it in the presence of this uncertainty.</p>
+<p>There are many practical applications of this problem e.g. in Robotics, Finance, Healthcare, etc. In Robotics, take the example of a self-driving car. It gets information about its environment (e.g. other cars, lane lines and traffic signs) from its sensors, e.g. a camera or LIDAR. In order to drive safely, among other things, it needs to know the current position of other cars, as well as the expected future position of those cars. For example, if another car is changing lanes, where will it enter its own lane? Depending on that, it has to make a decision of whether to slow-down, keep its speed or take some other action. It makes an estimate of the future position of the car using a "motion model" of the other car, then updates its estimate based on its sensor reading. It does this in a continuous loop. This state estimate is then used to take an approrpiate action (e.g. apply brakes, honk, steer etc).</p>
+<p>In healthcare, this can be applied to monitoring patient condition and administering treatments. An ICU patient's current condition may dictate probabilities of various outcomes based on prior knowledge, e.g. how likely is the patient to have a septic shock. Call it the Patient's Health Model. In addition, there are various sensor readings e.g. blood pressure, heart rate, glucose level etc., which are monitored regularly. An intelligent patient monitoring agent takes both of these into account and estimates the probability of septic shock, in order to administer a treatment or alert a human expert.</p>
+<p>In finance, a stock trading agent may need to estimate the state of a stock, e.g. is the price about to move up or down? It may have prior knowledge based on a model based on fundamentals of the company, and it can track various technical indicators. Based on the market conditions, it updates its current estimate of the state of stock based on both to make a decision on whether to buy or sell.</p>
+<p>To solidify the concepts, I will formulate the problem with a very simple example of weather prediction. This problem is taken from the book <em>Probabilistic Robotics</em> by Sebastian Thrun et. al.</p>
+<p>Consider that we have 3 possible weathers: sunny, cloudy, rainy. Today is the first day, and we know (for a fact) that it is cloudy.</p>
 
 </div>
 </div>
@@ -11799,7 +11804,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>I modeled the initial state as a probability distribution, eventhough I stated above that we know for sure that it's cloudy. The reason for this will become apparent when we see how the state and belief updates work in Bayesian Filtering. For now, just understand that we modeled this certainty by having a probability of 1 for cloudy, and 0 for others.</p>
+<p>I modeled the initial state as a probability distribution, eventhough I stated above that we know for sure that it's cloudy. The reason for this will become apparent when we see how the state estimates work in Bayesian Filtering. For now, just understand that we modeled this certainty by having a probability of 1 for cloudy, and 0 for others.</p>
 <p>Let's assume that we can't directly see or know about the weather (maybe after observing the weather on day 1, we went into an underground shelter without any link to the outside world). But we have a meteorologist with us and he knows a thing or two about weather transitions. In other words, if it was cloudy yesterday, what should I expect today? Or if it is rainy, would it be raining again tomorrow? Now he is not certain about this, so the information he actually has are the probabilities of transitioning from from one weather to another the next day. Since we have 3 weathers, we can represent these probabilities as a 3x3 matrix.</p>
 
 </div>
@@ -11841,19 +11846,19 @@ div#notebook {
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Now let's say we slept in our shelter for the night and woke up the next day. What is the weather today? What can we infer based only on the initial state (yesterday's weather) and the weather transition probabilities. First, we know that various transitions are possible, so we're not going to get one value, rather a probability distribution over different weathers. Since we know for sure that the previous weather was cloudy, the probability distribution is simply:</p>
-<p>$$[p(x_t='sunny'|x_{t-1}='cloudy'), $$
-$$p(x_t='cloudy'|x_{t-1}='cloudy'), $$
-$$p(x_t='rainy'|x_{t-1}='cloudy')]$$</p>
+<p>$[p(x_t='sunny'|x_{t-1}='cloudy'), $
+$ p(x_t='cloudy'|x_{t-1}='cloudy'), $
+$ p(x_t='rainy'|x_{t-1}='cloudy')] $</p>
 <p>Here $x_t$ represents the state at time t and $x_{t-1}$ the previous state. These conditional probabilities become:</p>
-<p>$$[p(x_t='sunny') * p(x_{t-1}='cloudy'), $$
-$$p(x_t='cloudy' * p(x_{t-1}='cloudy'), $$
-$$p(x_t='rainy') * p(x_{t-1}='cloudy')]$$</p>
+<p>$[p(x_t='sunny') * p(x_{t-1}='cloudy'), $
+$ p(x_t='cloudy') * p(x_{t-1}='cloudy'), $
+$ p(x_t='rainy') * p(x_{t-1}='cloudy')] $</p>
 <p>Since we have $p(x_{t-1}='cloudy')=1$, this simply gives us the second row of the transition table above:</p>
 <p>= [0.4, 0.4, 0.2]</p>
 <p>However, to generalize further, we don't want to assume that we always know the previous state for sure. Therefore, we will use the probability distribution of the previous state.</p>
-<p>$$[p(x_t='sunny'|x_{t-1}='sunny')+p(x_t='sunny'|x_{t-1}='cloudy')+p(x_t='sunny'|x_{t-1}='rainy'), $$
-$$ p(x_t='cloudy'|x_{t-1}='sunny')+p(x_t='cloudy'|x_{t-1}='cloudy')+p(x_t='cloudy'|t_{k-1}='rainy'), $$
-$$ p(x_t='rainy'|x_{t-1}='sunny')+p(x_t='rainy'|x_{t-1}='cloudy')+p(x_t='rainy'|x_{t-1}='rainy')] $$</p>
+<p>$[p(x_t='sunny'|x_{t-1}='sunny')+p(x_t='sunny'|x_{t-1}='cloudy')+p(x_t='sunny'|x_{t-1}='rainy'), $
+$ p(x_t='cloudy'|x_{t-1}='sunny')+p(x_t='cloudy'|x_{t-1}='cloudy')+p(x_t='cloudy'|t_{k-1}='rainy'), $
+$ p(x_t='rainy'|x_{t-1}='sunny')+p(x_t='rainy'|x_{t-1}='cloudy')+p(x_t='rainy'|x_{t-1}='rainy')] $</p>
 <p>Here, $x_{k-1}$ is 0 for both 'sunny' and 'rainy', so we are left with the middle terms, which gives us the same result [0.4, 0.4, 0.2]</p>
 <p>Putting this in code:</p>
 
@@ -11897,7 +11902,7 @@ $$ p(x_t='rainy'|x_{t-1}='sunny')+p(x_t='rainy'|x_{t-1}='cloudy')+p(x_t='rainy'|
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This basically multiplies the initial belief (p) element-wise with each column of the transition probabilities table, pt, and adds up the resulting rows (it will be a good exercise to work this through by hand and verify that it is correct). Since we were 100% sure that the initial weather was cloudy, the resulting probability vector is just the 2nd row of pt, which are the transition probabilities from an initial cloudy weather. If we weren't 100% sure of the initial state, we could use a different probabilistic distribution and our calculation model would still work. So from our isolated shelter, we now infer that there is a 40% chance that today is sunny, 40% chance of it being cloudy and only 20% chance that it is rainy.</p>
+<p>This basically multiplies the initial belief (p) element-wise with each column of the transition probabilities table, pt, and adds up the resulting rows (it will be a good exercise to work this through by hand and verify that it is correct). So from our isolated shelter, we now infer that there is a 40% chance that today is sunny, 40% chance of it being cloudy and only 20% chance that it is rainy.</p>
 <p>We assumed earlier that we can't directly observe the weather. But let's suppose we have a sensor which can measure the three weather conditions.</p>
 
 </div>
@@ -12037,7 +12042,7 @@ $$ p(x_t='rainy'|x_{t-1}='sunny')+p(x_t='rainy'|x_{t-1}='cloudy')+p(x_t='rainy'|
 <li><p>Sensor update: Also called just 'sense', where we incorporate the reading from the sensor into our prediction.</p>
 </li>
 </ol>
-<p>This is called the "update rule" in Bayes Filter. We can encode it as an algorithm as the following pseudo-code:</p>
+<p>This is called the "update rule" in Bayesian Filters. Below, I encode it as an algorithm in pseudo-code:</p>
 
 <pre><code>function update(p(x{t-1}, z{t}):
 
